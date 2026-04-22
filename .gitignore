@@ -7,3 +7,5 @@ dist/
 build/
 .ruff_cache/
 *.md.backup
+.DS_Store
+*.webloc
