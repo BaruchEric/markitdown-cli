@@ -10,15 +10,24 @@ def _default_output_path(src: Path) -> Path:
     return src.with_suffix(src.suffix + ".md")
 
 
-def convert_file(src: Path, out: Path | None = None, md: MarkItDown | None = None) -> Path:
+def convert_file(
+    src: Path,
+    out: Path | None = None,
+    md: MarkItDown | None = None,
+    force: bool = False,
+) -> Path:
     """Convert a single file to markdown. Returns the output path.
 
-    Raises on conversion failure. Caller is responsible for error aggregation.
+    If the target already exists and is newer than the source, skips unless
+    `force=True`. Raises on conversion failure.
     """
     src = Path(src)
     if out is None:
         out = _default_output_path(src)
     out = Path(out)
+
+    if not force and out.exists() and out.stat().st_mtime >= src.stat().st_mtime:
+        return out
 
     md = md or MarkItDown()
     result = md.convert(str(src))
