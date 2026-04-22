@@ -16,12 +16,15 @@ def convert_file(
     out: Path | None = None,
     md: MarkItDown | None = None,
     force: bool = False,
+    audio: bool = False,
 ) -> Path:
     """Convert a single file to markdown. Returns the output path.
 
-    If the target already exists and is newer than the source, skips unless
-    `force=True`. Raises on conversion failure.
+    If `audio=True` and the file is an audio format, use the OpenAI Whisper API.
+    Otherwise use upstream markitdown.
     """
+    from markitdown_cli.formats import AUDIO_EXTENSIONS
+
     src = Path(src)
     if out is None:
         out = _default_output_path(src)
@@ -29,6 +32,9 @@ def convert_file(
 
     if not force and out.exists() and out.stat().st_mtime >= src.stat().st_mtime:
         return out
+
+    if audio and src.suffix.lower() in AUDIO_EXTENSIONS:
+        return transcribe_audio(src, out=out)
 
     md = md or MarkItDown()
     result = md.convert(str(src))
@@ -55,6 +61,7 @@ def convert_tree(
     out_root: Path | None = None,
     md: MarkItDown | None = None,
     force: bool = False,
+    audio: bool = False,
 ) -> ConvertSummary:
     """Recursively convert every supported file under `src_root`.
 
@@ -85,7 +92,7 @@ def convert_tree(
             if not force and dest.exists() and dest.stat().st_mtime >= src.stat().st_mtime:
                 summary.skipped += 1
                 continue
-            convert_file(src, out=dest, md=md, force=True)
+            convert_file(src, out=dest, md=md, force=True, audio=audio)
             summary.converted += 1
         except Exception as e:  # noqa: BLE001 — aggregate, don't abort
             summary.errors.append((src, f"{type(e).__name__}: {e}"))
@@ -100,3 +107,22 @@ def build_markitdown(ocr: bool = False) -> MarkItDown:
     from markitdown_cli.config import get_openai_client
     client = get_openai_client(feature="--ocr")
     return MarkItDown(llm_client=client, llm_model="gpt-4o-mini")
+
+
+def transcribe_audio(src: Path, out: Path | None = None) -> Path:
+    """Transcribe an audio file via OpenAI Whisper API and write markdown."""
+    from markitdown_cli.config import get_openai_client
+
+    src = Path(src)
+    if out is None:
+        out = _default_output_path(src)
+    out = Path(out)
+
+    client = get_openai_client(feature="--audio")
+    with src.open("rb") as f:
+        resp = client.audio.transcriptions.create(model="whisper-1", file=f)
+
+    body = f"# Transcript: {src.name}\n\n{resp.text.strip()}\n"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(body)
+    return out

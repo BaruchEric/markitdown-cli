@@ -109,10 +109,10 @@ def test_convert_tree_aggregates_errors_without_aborting(tmp_path, monkeypatch):
 
     real = convert_mod.convert_file
 
-    def flaky(src, out=None, md=None, force=False):
+    def flaky(src, out=None, md=None, force=False, audio=False):
         if Path(src).name == "bad.txt":
             raise RuntimeError("simulated parser failure")
-        return real(src, out=out, md=md, force=force)
+        return real(src, out=out, md=md, force=force, audio=audio)
 
     monkeypatch.setattr(convert_mod, "convert_file", flaky)
 
