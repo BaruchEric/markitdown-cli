@@ -145,3 +145,18 @@ def test_single_file_skip_is_reported_as_skipped_not_converted(tmp_path, monkeyp
     out2 = capsys.readouterr().out
     assert "Converted 0" in out2
     assert "Skipped 1 (up-to-date)" in out2
+
+
+def test_convert_tree_verbose_prints_per_file(tmp_path, capsys):
+    src_root = tmp_path / "docs"
+    src_root.mkdir()
+    (src_root / "a.txt").write_text("A\n")
+    (src_root / "ignored.xyz").write_text("x\n")
+
+    out_root = tmp_path / "out"
+    convert_tree(src_root, out_root, verbose=True)
+    output = capsys.readouterr().out
+
+    assert "a.txt" in output
+    assert "ignored.xyz" in output
+    assert "unsupported" in output

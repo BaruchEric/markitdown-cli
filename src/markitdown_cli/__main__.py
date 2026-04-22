@@ -13,7 +13,7 @@ from markitdown_cli.convert import (
 )
 
 
-def _print_summary(summary: ConvertSummary, verbose: bool) -> None:
+def _print_summary(summary: ConvertSummary) -> None:
     print(
         f"Converted {summary.converted} • "
         f"Skipped {summary.skipped} (up-to-date) • "
@@ -84,8 +84,9 @@ def main(argv: list[str] | None = None) -> int:
             md=md,
             force=args.force,
             audio=args.audio,
+            verbose=args.verbose,
         )
-        _print_summary(summary, args.verbose)
+        _print_summary(summary)
         return 1 if summary.errors else 0
     except MissingKeyError as e:
         print(str(e), file=sys.stderr)

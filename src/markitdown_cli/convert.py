@@ -62,6 +62,7 @@ def convert_tree(
     md: MarkItDown | None = None,
     force: bool = False,
     audio: bool = False,
+    verbose: bool = False,
 ) -> ConvertSummary:
     """Recursively convert every supported file under `src_root`.
 
@@ -83,6 +84,8 @@ def convert_tree(
             continue
         if not is_supported(str(src)):
             summary.unsupported += 1
+            if verbose:
+                print(f"{src}: unsupported")
             continue
 
         rel = src.relative_to(src_root)
@@ -91,11 +94,17 @@ def convert_tree(
         try:
             if not force and dest.exists() and dest.stat().st_mtime >= src.stat().st_mtime:
                 summary.skipped += 1
+                if verbose:
+                    print(f"{src}: skipped (up-to-date)")
                 continue
             convert_file(src, out=dest, md=md, force=True, audio=audio)
             summary.converted += 1
+            if verbose:
+                print(f"{src} -> {dest}")
         except Exception as e:  # noqa: BLE001 — aggregate, don't abort
             summary.errors.append((src, f"{type(e).__name__}: {e}"))
+            if verbose:
+                print(f"{src}: ERROR {type(e).__name__}: {e}")
 
     return summary
 
