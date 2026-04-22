@@ -97,3 +97,31 @@ def test_convert_tree_default_output_is_sibling_md_dir(tmp_path):
 
     assert summary.converted == 1
     assert (tmp_path / "docs.md" / "a.txt.md").exists()
+
+
+def test_convert_tree_aggregates_errors_without_aborting(tmp_path, monkeypatch):
+    src_root = tmp_path / "docs"
+    src_root.mkdir()
+    (src_root / "good.txt").write_text("good\n")
+    (src_root / "bad.txt").write_text("bad\n")
+
+    from markitdown_cli import convert as convert_mod
+
+    real = convert_mod.convert_file
+
+    def flaky(src, out=None, md=None, force=False):
+        if Path(src).name == "bad.txt":
+            raise RuntimeError("simulated parser failure")
+        return real(src, out=out, md=md, force=force)
+
+    monkeypatch.setattr(convert_mod, "convert_file", flaky)
+
+    out_root = tmp_path / "out"
+    summary = convert_mod.convert_tree(src_root, out_root)
+
+    assert summary.converted == 1
+    assert len(summary.errors) == 1
+    bad_path, msg = summary.errors[0]
+    assert bad_path.name == "bad.txt"
+    assert "simulated parser failure" in msg
+    assert (out_root / "good.txt.md").exists()
