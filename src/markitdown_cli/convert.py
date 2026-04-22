@@ -91,3 +91,12 @@ def convert_tree(
             summary.errors.append((src, f"{type(e).__name__}: {e}"))
 
     return summary
+
+
+def build_markitdown(ocr: bool = False) -> MarkItDown:
+    """Construct a MarkItDown instance, optionally wired for LLM image description."""
+    if not ocr:
+        return MarkItDown()
+    from markitdown_cli.config import get_openai_client
+    client = get_openai_client(feature="--ocr")
+    return MarkItDown(llm_client=client, llm_model="gpt-4o-mini")
