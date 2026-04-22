@@ -10,6 +10,14 @@ uv tool install /Users/ericbaruch/Arik/dev/markitdown
 
 This exposes a `mdc` command on your `PATH`.
 
+### Reinstalling after local changes
+
+`uv tool install --force .` reuses cached builds and can silently ship stale code. To pick up changes:
+
+```bash
+uv tool uninstall markitdown-cli && uv tool install --reinstall --no-cache .
+```
+
 ## Usage
 
 Single file:
