@@ -1,0 +1,23 @@
+[project]
+name = "markitdown-cli"
+version = "0.1.0"
+description = "Personal disk utility + Claude skill wrapping Microsoft markitdown"
+requires-python = ">=3.11"
+dependencies = [
+    "markitdown[all]>=0.0.1a2",
+    "python-dotenv>=1.0.0",
+    "openai>=1.40.0",
+]
+
+[project.scripts]
+mdc = "markitdown_cli.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/markitdown_cli"]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
