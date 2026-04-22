@@ -125,3 +125,23 @@ def test_convert_tree_aggregates_errors_without_aborting(tmp_path, monkeypatch):
     assert bad_path.name == "bad.txt"
     assert "simulated parser failure" in msg
     assert (out_root / "good.txt.md").exists()
+
+
+def test_single_file_skip_is_reported_as_skipped_not_converted(tmp_path, monkeypatch, capsys):
+    from markitdown_cli.__main__ import main
+
+    src = tmp_path / "hello.txt"
+    src.write_text("x\n")
+    # First run: converts
+    rc1 = main([str(src)])
+    assert rc1 == 0
+    out1 = capsys.readouterr().out
+    assert "Converted 1" in out1
+    assert "Skipped 0" in out1
+
+    # Second run with no changes: should report as skipped
+    rc2 = main([str(src)])
+    assert rc2 == 0
+    out2 = capsys.readouterr().out
+    assert "Converted 0" in out2
+    assert "Skipped 1 (up-to-date)" in out2
