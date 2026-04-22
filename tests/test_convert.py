@@ -62,3 +62,38 @@ def test_force_rewrites_even_if_target_is_newer(tmp_path):
     convert_file(src, force=True)
 
     assert "v2" in out.read_text()
+
+
+from markitdown_cli.convert import convert_tree, ConvertSummary
+
+
+def test_convert_tree_mirrors_input_structure(tmp_path):
+    src_root = tmp_path / "docs"
+    (src_root / "sub").mkdir(parents=True)
+    (src_root / "a.txt").write_text("A\n")
+    (src_root / "sub" / "b.txt").write_text("B\n")
+    (src_root / "unsupported.xyz").write_text("ignored\n")
+
+    out_root = tmp_path / "out"
+    summary = convert_tree(src_root, out_root)
+
+    assert isinstance(summary, ConvertSummary)
+    assert summary.converted == 2
+    assert summary.unsupported == 1
+    assert summary.skipped == 0
+    assert summary.errors == []
+
+    assert (out_root / "a.txt.md").exists()
+    assert (out_root / "sub" / "b.txt.md").exists()
+    assert not (out_root / "unsupported.xyz.md").exists()
+
+
+def test_convert_tree_default_output_is_sibling_md_dir(tmp_path):
+    src_root = tmp_path / "docs"
+    src_root.mkdir()
+    (src_root / "a.txt").write_text("A\n")
+
+    summary = convert_tree(src_root)
+
+    assert summary.converted == 1
+    assert (tmp_path / "docs.md" / "a.txt.md").exists()
