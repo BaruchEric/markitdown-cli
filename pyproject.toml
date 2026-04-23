@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Personal disk utility + Claude skill wrapping Microsoft markitdown"
 requires-python = ">=3.11"
 dependencies = [
-    "markitdown[all]>=0.0.1a2",
+    "markitdown[all]>=0.1.5",
     "python-dotenv>=1.0.0",
     "openai>=1.40.0",
 ]
